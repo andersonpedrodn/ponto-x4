@@ -4,21 +4,43 @@
     <p class="text-sm text-muted">Meu controle de ponto</p>
   </header>
 
-  <nav class="mb-4 flex gap-1.5">
-    @for (aba of abas; track aba.rota) {
-      <a
-        [routerLink]="aba.rota"
-        routerLinkActive="!border-brand !bg-brand !font-semibold !text-white"
-        class="rounded-full border border-line bg-white px-5 py-2 text-sm text-muted"
-      >{{ aba.nome }}</a>
-    }
-  </nav>
+  @if (!auth.pronto()) {
+    <p class="text-sm text-muted">Carregando…</p>
+  } @else if (!auth.user()) {
+    <section class="w-full rounded-xl border border-line bg-white p-6 text-center">
+      <h2 class="mb-1 text-[15px] font-semibold">Entre para ver seus horários</h2>
+      <p class="mb-4 text-sm text-muted">Seus registros ficam salvos na sua conta Google.</p>
+      <button
+        type="button"
+        (click)="auth.entrarComGoogle()"
+        class="w-full cursor-pointer rounded-lg border border-brand bg-brand py-3 font-semibold text-white transition hover:bg-brand-dark"
+      >Entrar com Google</button>
+      @if (auth.erro()) {
+        <p class="mt-3 text-sm text-warn">{{ auth.erro() }}</p>
+      }
+    </section>
+  } @else {
+    <nav class="mb-4 flex gap-1.5">
+      @for (aba of abas; track aba.rota) {
+        <a
+          [routerLink]="aba.rota"
+          routerLinkActive="!border-brand !bg-brand !font-semibold !text-white"
+          class="rounded-full border border-line bg-white px-5 py-2 text-sm text-muted"
+        >{{ aba.nome }}</a>
+      }
+    </nav>
 
-  <main class="w-full flex-1">
-    <router-outlet />
-  </main>
+    <main class="w-full flex-1">
+      <router-outlet />
+    </main>
 
-  <footer class="mt-6 text-center text-xs text-muted">
+    <p class="mt-5 text-center text-xs text-muted">
+      {{ auth.user()?.email }} ·
+      <button type="button" (click)="auth.sair()" class="cursor-pointer underline">Sair</button>
+    </p>
+  }
+
+  <footer class="mt-4 text-center text-xs text-muted">
     Desenvolvido por Anderson Pedro do Nascimento
   </footer>
 </div>

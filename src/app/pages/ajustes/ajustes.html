@@ -27,9 +27,15 @@
 <section class="mt-4 rounded-xl border border-line bg-white p-6">
   <h2 class="mb-2 text-[15px] font-semibold">Backup dos dados</h2>
   <p class="text-xs text-muted">
-    Os dados ficam salvos neste navegador ({{ protegido() ? 'armazenamento protegido' : 'armazenamento padrão' }}).
-    Baixe o arquivo de backup de vez em quando e guarde no Drive ou e-mail.
+    Seus horários ficam salvos na conta {{ email()?.email }} (Firestore) e aparecem em qualquer aparelho em que você entrar.
+    O arquivo de backup é uma cópia extra opcional.
   </p>
+  @if (temDadosLocais()) {
+    <div class="mt-3 rounded-lg bg-surface p-3 text-sm">
+      Há registros da versão antiga salvos só neste navegador.
+      <button type="button" (click)="enviarLocais()" class="mt-2 block cursor-pointer rounded-lg border border-brand bg-brand px-3.5 py-2 text-sm font-semibold text-white">Enviar para minha conta</button>
+    </div>
+  }
   <p class="mt-2 text-xs text-muted">{{ ultimoBackup() }}</p>
   <div class="mt-3 flex flex-wrap gap-2">
     <button type="button" (click)="baixarBackup()" class="cursor-pointer rounded-lg border border-brand bg-brand px-3.5 py-2.5 text-sm font-semibold text-white">Baixar arquivo de backup</button>
