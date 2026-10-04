@@ -5,6 +5,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  id-token: write # necessário para autenticar no Google via Workload Identity Federation
+
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
@@ -19,9 +23,10 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      # Sem chave JSON: o GitHub prova a identidade do repositório ao Google.
+      - uses: google-github-actions/auth@v2
         with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: ponto-x4
-          channelId: live
+          workload_identity_provider: projects/968526686018/locations/global/workloadIdentityPools/github/providers/github-provider
+          service_account: github-deploy@ponto-x4.iam.gserviceaccount.com
+
+      - run: npx firebase-tools deploy --only hosting --project ponto-x4
