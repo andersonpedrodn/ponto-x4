@@ -23,7 +23,7 @@ export class AuthService {
     } catch (e: unknown) {
       const code = (e as { code?: string }).code;
       if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
-        this.erro.set('Não foi possível entrar. Tente novamente.');
+        this.erro.set(`Não foi possível entrar (${code ?? 'erro desconhecido'}). Tente novamente.`);
       }
     }
   }
