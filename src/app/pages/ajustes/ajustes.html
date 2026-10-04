@@ -1,0 +1,40 @@
+<section class="rounded-xl border border-line bg-white p-6">
+  <h2 class="mb-3 text-[15px] font-semibold">Jornada contratada por dia (horas:minutos)</h2>
+  <div class="grid grid-cols-2 gap-2">
+    @for (dia of ordem; track dia) {
+      <div>
+        <label class="mb-1 block text-sm text-muted" [attr.for]="'jor-' + dia">{{ nomes[dia] }}</label>
+        <input
+          type="time"
+          [id]="'jor-' + dia"
+          [value]="jornadas()[dia]"
+          (input)="alterar(dia, $any($event.target).value)"
+          class="w-full rounded-lg border border-line bg-white px-2.5 py-2"
+        />
+      </div>
+    }
+  </div>
+  <p class="mt-2 text-xs text-muted">
+    Tudo que passar disso no dia conta como hora extra. Deixe 00:00 nos dias sem expediente (todo o tempo vira extra).
+  </p>
+  <button
+    type="button"
+    (click)="salvarJornada()"
+    class="mt-3 cursor-pointer rounded-lg border border-brand bg-brand px-3.5 py-2.5 text-sm font-semibold text-white"
+  >{{ salvo() ? 'Salvo ✓' : 'Salvar jornada' }}</button>
+</section>
+
+<section class="mt-4 rounded-xl border border-line bg-white p-6">
+  <h2 class="mb-2 text-[15px] font-semibold">Backup dos dados</h2>
+  <p class="text-xs text-muted">
+    Os dados ficam salvos neste navegador ({{ protegido() ? 'armazenamento protegido' : 'armazenamento padrão' }}).
+    Baixe o arquivo de backup de vez em quando e guarde no Drive ou e-mail.
+  </p>
+  <p class="mt-2 text-xs text-muted">{{ ultimoBackup() }}</p>
+  <div class="mt-3 flex flex-wrap gap-2">
+    <button type="button" (click)="baixarBackup()" class="cursor-pointer rounded-lg border border-brand bg-brand px-3.5 py-2.5 text-sm font-semibold text-white">Baixar arquivo de backup</button>
+    <button type="button" (click)="arquivo.click()" class="cursor-pointer rounded-lg border border-line px-3.5 py-2.5 text-sm">Importar arquivo</button>
+    <input #arquivo type="file" accept="application/json,.json" class="hidden" (change)="importar($event)" />
+  </div>
+  <p class="mt-2 min-h-5 text-center text-sm text-muted">{{ mensagem() }}</p>
+</section>

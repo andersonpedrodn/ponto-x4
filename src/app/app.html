@@ -1,0 +1,24 @@
+<div class="mx-auto flex min-h-screen w-full max-w-md flex-col items-center px-4 pt-6 pb-10">
+  <header class="mb-5 text-center">
+    <img src="logo-x4.avif" alt="X4 Serviços" class="mx-auto mb-1 h-14 w-auto" />
+    <p class="text-sm text-muted">Meu controle de ponto</p>
+  </header>
+
+  <nav class="mb-4 flex gap-1.5">
+    @for (aba of abas; track aba.rota) {
+      <a
+        [routerLink]="aba.rota"
+        routerLinkActive="!border-brand !bg-brand !font-semibold !text-white"
+        class="rounded-full border border-line bg-white px-5 py-2 text-sm text-muted"
+      >{{ aba.nome }}</a>
+    }
+  </nav>
+
+  <main class="w-full flex-1">
+    <router-outlet />
+  </main>
+
+  <footer class="mt-6 text-center text-xs text-muted">
+    Desenvolvido por Anderson Pedro do Nascimento
+  </footer>
+</div>

@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #1f4e9c;
+  --color-brand-dark: #173b79;
+  --color-ok: #12805c;
+  --color-warn: #c2410c;
+  --color-surface: #f3f5f8;
+  --color-line: #e0e4ea;
+  --color-muted: #667085;
+  --font-sans: "Segoe UI", Arial, sans-serif;
+}
+
+body {
+  @apply bg-surface text-neutral-900 min-h-screen;
+}
