@@ -31,7 +31,8 @@
           <tr class="cursor-pointer border-t border-line hover:bg-surface" (click)="abrir(l.chave)">
             <td class="px-1 py-2.5">{{ l.dia }} <span class="text-muted">{{ l.diaSemana }}</span></td>
             <td class="px-1 py-2.5">
-              @if (l.temRegistro) { {{ l.registros }} } @else { <span class="text-muted">sem registro</span> }
+              @if (l.feriado) { <b class="mr-1 text-xs uppercase">Feriado</b> }
+              @if (l.temRegistro) { {{ l.registros }} } @else if (!l.feriado) { <span class="text-muted">sem registro</span> }
             </td>
             <td class="px-1 py-2.5 text-right">{{ l.temRegistro ? fmtMin(l.total) : '–' }}</td>
             <td class="px-1 py-2.5 text-right" [class]="classeSaldo(l.saldo)">{{ fmtSaldo(l.saldo) }}</td>
@@ -46,7 +47,7 @@
 </section>
 
 @if (editando()) {
-  <section class="mt-4 nb-card p-6">
+  <section id="editor-dia" class="mt-4 nb-card p-6 scroll-mt-4">
     <h2 class="mb-3 text-[15px] font-semibold">{{ tituloEdicao() }}</h2>
     @for (h of horarios(); track $index; let i = $index) {
       <div class="mb-2 flex items-center gap-2">
@@ -60,6 +61,13 @@
         <button type="button" (click)="remover(i)" class="nb-btn nb-btn-ghost px-3 py-2 text-sm text-warn">Remover</button>
       </div>
     }
+    <button
+      type="button"
+      (click)="alternarFeriado()"
+      [attr.aria-pressed]="feriadoEdicao()"
+      class="nb-btn mt-1 px-3.5 py-2.5 text-sm"
+      [class]="feriadoEdicao() ? 'nb-btn-primary' : 'nb-btn-ghost'"
+    >{{ feriadoEdicao() ? '✓ Dia de feriado' : 'Marcar como feriado' }}</button>
     <div class="mt-3 flex flex-wrap gap-2">
       <button type="button" (click)="adicionar()" class="nb-btn nb-btn-ghost px-3.5 py-2.5 text-sm">+ Registro</button>
       <button type="button" (click)="salvar()" class="nb-btn nb-btn-primary px-3.5 py-2.5 text-sm ">Salvar</button>

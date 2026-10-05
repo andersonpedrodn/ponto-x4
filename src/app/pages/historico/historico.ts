@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, Injector, afterNextRender, computed, inject, signal } from '@angular/core';
 import { DIAS_CURTOS } from '../../core/models';
 import { PontoService } from '../../core/ponto.service';
 import { chaveDia, classeSaldo, fmtMin, fmtSaldo, hhmm, pad, trabalhado } from '../../core/time.utils';
@@ -9,6 +9,7 @@ interface LinhaDia {
   diaSemana: string;
   registros: string;
   temRegistro: boolean;
+  feriado: boolean;
   total: number;
   saldo: number;
 }
@@ -19,6 +20,7 @@ interface LinhaDia {
 })
 export class Historico {
   private readonly ponto = inject(PontoService);
+  private readonly injector = inject(Injector);
 
   protected readonly fmtMin = fmtMin;
   protected readonly fmtSaldo = fmtSaldo;
@@ -42,9 +44,10 @@ export class Historico {
       const chave = `${ano}-${pad(m + 1)}-${pad(d)}`;
       const batidas = db.dias[chave] ?? [];
       const dow = new Date(ano, m, d).getDay();
-      const jornada = db.jornada[dow];
-      // dias futuros e dias sem expediente e sem registro não aparecem
-      if (!batidas.length && (chave > hojeChave || jornada === 0)) continue;
+      const feriado = db.feriados.includes(chave);
+      const jornada = feriado ? 0 : db.jornada[dow];
+      // dias futuros e dias sem expediente e sem registro não aparecem (feriado marcado sempre aparece)
+      if (!batidas.length && !feriado && (chave > hojeChave || jornada === 0)) continue;
 
       const total = trabalhado(batidas, chave === hojeChave ? this.ponto.agora() : null);
       linhas.push({
@@ -53,6 +56,7 @@ export class Historico {
         diaSemana: DIAS_CURTOS[dow],
         registros: batidas.map(hhmm).join(' · '),
         temRegistro: batidas.length > 0,
+        feriado,
         total,
         // dia útil já passado sem registro conta como falta (saldo negativo)
         saldo: batidas.length || chave < hojeChave ? total - jornada : 0,
@@ -67,6 +71,7 @@ export class Historico {
   // ----- edição de um dia -----
   protected readonly editando = signal<string | null>(null);
   protected readonly horarios = signal<string[]>([]);
+  protected readonly feriadoEdicao = signal(false);
   protected readonly tituloEdicao = computed(() => {
     const k = this.editando();
     if (!k) return '';
@@ -83,6 +88,16 @@ export class Historico {
   protected abrir(chave: string) {
     this.editando.set(chave);
     this.horarios.set((this.ponto.db().dias[chave] ?? []).map(hhmm));
+    this.feriadoEdicao.set(this.ponto.db().feriados.includes(chave));
+    // o editor fica abaixo da tabela: leva a tela até ele
+    afterNextRender(
+      () => document.getElementById('editor-dia')?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+      { injector: this.injector },
+    );
+  }
+
+  protected alternarFeriado() {
+    this.feriadoEdicao.update(v => !v);
   }
 
   protected fechar() {
@@ -112,7 +127,7 @@ export class Historico {
         return new Date(y, mo - 1, d, h, mi, 0).getTime();
       })
       .sort((a, b) => a - b);
-    this.ponto.setDia(chave, batidas);
+    this.ponto.setDia(chave, batidas, this.feriadoEdicao());
     this.fechar();
   }
 

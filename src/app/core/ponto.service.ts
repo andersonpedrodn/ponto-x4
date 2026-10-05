@@ -16,7 +16,7 @@ type Batch = ReturnType<typeof writeBatch>;
 /**
  * Estrutura no Firestore:
  *   users/{uid}                   -> { jornada: number[] }
- *   users/{uid}/dias/{AAAA-MM-DD} -> { batidas: number[] }
+ *   users/{uid}/dias/{AAAA-MM-DD} -> { batidas: number[], feriado?: boolean }
  */
 @Injectable({ providedIn: 'root' })
 export class PontoService {
@@ -54,9 +54,9 @@ export class PontoService {
     return this.vigiar(setDoc(this.refDia(k), { batidas: arrayUnion(Date.now()) }, { merge: true }));
   }
 
-  setDia(chave: string, batidas: number[]) {
-    return this.vigiar(batidas.length
-      ? setDoc(this.refDia(chave), { batidas })
+  setDia(chave: string, batidas: number[], feriado = false) {
+    return this.vigiar(batidas.length || feriado
+      ? setDoc(this.refDia(chave), feriado ? { batidas, feriado } : { batidas })
       : deleteDoc(this.refDia(chave)));
   }
 
@@ -79,7 +79,8 @@ export class PontoService {
     try {
       const d = JSON.parse(texto);
       if (!d?.dias || !Array.isArray(d.jornada)) return false;
-      await this.substituirTudo({ jornada: d.jornada, dias: d.dias });
+      const feriados = Array.isArray(d.feriados) ? d.feriados : [];
+      await this.substituirTudo({ jornada: d.jornada, dias: d.dias, feriados });
       return true;
     } catch {
       return false;
@@ -95,17 +96,20 @@ export class PontoService {
     for (const [k, b] of Object.entries(local.dias)) {
       dias[k] = [...new Set([...(atuais[k] ?? []), ...b])].sort((x, y) => x - y);
     }
-    await this.substituirTudo({ jornada: local.jornada, dias });
+    await this.substituirTudo({ jornada: local.jornada, dias, feriados: this.db().feriados });
     try { localStorage.removeItem(KEY_LOCAL); } catch { /* ignora */ }
     this.dadosLocais.set(null);
   }
 
   private async substituirTudo(novo: PontoDb) {
-    const atuais = Object.keys(this.db().dias);
+    const feriados = new Set(novo.feriados);
+    const chaves = new Set([...Object.keys(novo.dias), ...feriados]);
+    const atuais = new Set([...Object.keys(this.db().dias), ...this.db().feriados]);
     const ops: ((b: Batch) => void)[] = [
       b => b.set(this.refUsuario(), { jornada: novo.jornada }, { merge: true }),
-      ...atuais.filter(k => !(k in novo.dias)).map(k => (b: Batch) => b.delete(this.refDia(k))),
-      ...Object.entries(novo.dias).map(([k, batidas]) => (b: Batch) => b.set(this.refDia(k), { batidas })),
+      ...[...atuais].filter(k => !chaves.has(k)).map(k => (b: Batch) => b.delete(this.refDia(k))),
+      ...[...chaves].map(k => (b: Batch) => b.set(this.refDia(k),
+        feriados.has(k) ? { batidas: novo.dias[k] ?? [], feriado: true } : { batidas: novo.dias[k] })),
     ];
     for (let i = 0; i < ops.length; i += 400) {
       const batch = writeBatch(firestore);
@@ -117,11 +121,12 @@ export class PontoService {
   private escutar(uid: string) {
     let jornada = DB_PADRAO.jornada;
     let dias: Record<string, number[]> = {};
+    let feriados: string[] = [];
     let recebeuJornada = false;
     let recebeuDias = false;
 
     const publicar = () => {
-      this.db.set({ jornada, dias });
+      this.db.set({ jornada, dias, feriados });
       if (recebeuJornada && recebeuDias) this.carregado.set(true);
     };
 
@@ -135,9 +140,11 @@ export class PontoService {
       }, e => this.falhou(e)),
       onSnapshot(collection(firestore, 'users', uid, 'dias'), snap => {
         dias = {};
+        feriados = [];
         snap.forEach(d => {
           const b: number[] = d.data()['batidas'] ?? [];
           if (b.length) dias[d.id] = [...b].sort((x, y) => x - y);
+          if (d.data()['feriado'] === true) feriados.push(d.id);
         });
         recebeuDias = true;
         publicar();
