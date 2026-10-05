@@ -16,6 +16,8 @@ const EMPREGADO = { nome: 'Anderson Pedro do Nascimento', cargo: 'Web Design' };
 
 interface LinhaFolha {
   dia: string;
+  /** 'AAAA-MM-DD', ou '' para dias que não existem no mês. */
+  chave: string;
   /** Texto que ocupa a coluna Entrada quando não há batidas (Sábado, Domingo, Feriado). */
   rotulo: string;
   entrada: string;
@@ -25,6 +27,11 @@ interface LinhaFolha {
   /** Dia com batidas registradas (usado para deixar a saída em branco na versão para empresa). */
   trabalhado: boolean;
 }
+
+const hhmmParaTs = (v: string) => {
+  const [h, m] = v.split(':').map(Number);
+  return new Date(2000, 0, 1, h, m).getTime();
+};
 
 const hora = (ts?: number) => (ts == null ? '—' : hhmm(ts).replace(':', 'h'));
 
@@ -80,17 +87,18 @@ export class Folha {
 
     for (let d = 1; d <= 31; d++) {
       const dia = pad(d);
-      const vazia: LinhaFolha = { dia, rotulo: '—', entrada: '—', inicio: '—', fim: '—', saida: '—', trabalhado: false };
+      const vazia: LinhaFolha = { dia, chave: '', rotulo: '—', entrada: '—', inicio: '—', fim: '—', saida: '—', trabalhado: false };
       if (d > diasNoMes) { linhas.push(vazia); continue; }
 
       const chave = `${ano}-${pad(m + 1)}-${dia}`;
+      vazia.chave = chave;
       const b = db.dias[chave] ?? [];
       const dow = new Date(ano, m, d).getDay();
 
       if (b.length) {
         // 2 batidas = entrada e saída sem intervalo; 4 = jornada com intervalo
         const [e, i, f, s] = b.length === 2 ? [b[0], undefined, undefined, b[1]] : b;
-        linhas.push({ dia, rotulo: '', entrada: hora(e), inicio: hora(i), fim: hora(f), saida: hora(s), trabalhado: true });
+        linhas.push({ dia, chave, rotulo: '', entrada: hora(e), inicio: hora(i), fim: hora(f), saida: hora(s), trabalhado: true });
       } else if (db.feriados.includes(chave)) {
         linhas.push({ ...vazia, rotulo: 'Feriado' });
       } else if (db.jornada[dow] === 0) {
@@ -101,6 +109,32 @@ export class Folha {
     }
     return linhas;
   });
+
+  /** Saídas ajustadas só para a impressão (não alteram os dados salvos). Chave 'AAAA-MM-DD' -> 'HH:MM'. */
+  protected readonly saidasEditadas = signal<Record<string, string>>({});
+  protected readonly editando = signal<string | null>(null);
+
+  protected saidaExibida(l: LinhaFolha): string {
+    const editada = this.saidasEditadas()[l.chave];
+    if (editada) return hora(hhmmParaTs(editada));
+    return this.empresa() && l.trabalhado ? '' : l.saida;
+  }
+
+  protected valorEdicao(l: LinhaFolha): string {
+    return this.saidasEditadas()[l.chave] ?? '';
+  }
+
+  protected editarSaida(l: LinhaFolha) {
+    if (l.chave) this.editando.set(l.chave);
+  }
+
+  protected confirmarSaida(l: LinhaFolha, valor: string) {
+    this.saidasEditadas.update(o => {
+      const { [l.chave]: _, ...resto } = o;
+      return valor ? { ...resto, [l.chave]: valor } : resto;
+    });
+    this.editando.set(null);
+  }
 
   protected mudarMes(delta: number) {
     const m = this.mes();

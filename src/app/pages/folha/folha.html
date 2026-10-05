@@ -14,6 +14,7 @@
 @if (empresa()) {
   <p class="mb-3 text-xs text-muted print:hidden">Versão para empresa: a coluna Saída sai em branco para preencher à mão.</p>
 }
+<p class="mb-3 text-xs text-muted print:hidden">Clique em uma Saída para editar o horário antes de imprimir (não altera seus registros).</p>
 
 <div>
   <!-- na tela a folha sai da coluna estreita do app e fica centralizada na janela, sem rolagem lateral -->
@@ -61,7 +62,15 @@
             <td class="border border-black">{{ l.rotulo || l.entrada }}</td>
             <td class="border border-black">{{ l.inicio }}</td>
             <td class="border border-black">{{ l.fim }}</td>
-            <td class="border border-black">{{ empresa() && l.trabalhado ? '' : l.saida }}</td>
+            <td class="border border-black p-0" [class]="l.chave ? 'cursor-pointer hover:bg-yellow-100 print:hover:bg-transparent' : ''" (click)="editarSaida(l)">
+              @if (editando() === l.chave) {
+                <input #campo type="time" [value]="valorEdicao(l)" (focus)="campo.showPicker?.()"
+                  (blur)="confirmarSaida(l, campo.value)" (keydown.enter)="campo.blur()" (keydown.escape)="editando.set(null)"
+                  class="w-full bg-yellow-100 text-center text-[10px] outline-none print:hidden" autofocus />
+              } @else {
+                {{ saidaExibida(l) }}
+              }
+            </td>
             <td class="border border-black"></td>
             <td class="border border-black"></td>
             <td class="border border-black"></td>
