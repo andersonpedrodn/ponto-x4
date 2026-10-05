@@ -1,5 +1,5 @@
-<div class="mx-auto flex min-h-screen w-full max-w-md flex-col items-center px-4 pt-6 pb-10">
-  <header class="mb-5 text-center">
+<div class="mx-auto flex min-h-screen w-full max-w-md flex-col items-center px-4 pt-6 pb-10 print:block print:min-h-0 print:max-w-none print:p-0">
+  <header class="mb-5 text-center print:hidden">
     <img src="logo-x4.avif" alt="X4 Serviços" class="mx-auto mb-1 h-14 w-auto" />
     <p class="text-sm font-semibold text-muted">Meu controle de ponto</p>
   </header>
@@ -28,7 +28,7 @@
       }
     </section>
   } @else {
-    <nav class="mb-4 flex gap-1.5">
+    <nav class="mb-4 flex gap-1.5 print:hidden">
       @for (aba of abas; track aba.rota) {
         <a
           [routerLink]="aba.rota"
@@ -39,20 +39,20 @@
     </nav>
 
     @if (ponto.erroNuvem()) {
-      <p class="nb-card mb-4 w-full p-3 text-sm font-semibold text-warn">{{ ponto.erroNuvem() }}</p>
+      <p class="nb-card mb-4 w-full p-3 text-sm font-semibold text-warn print:hidden">{{ ponto.erroNuvem() }}</p>
     }
 
     <main class="w-full flex-1">
       <router-outlet />
     </main>
 
-    <p class="mt-5 text-center text-xs text-muted">
+    <p class="mt-5 text-center text-xs text-muted print:hidden">
       {{ auth.user()?.email }} ·
       <button type="button" (click)="auth.sair()" class="cursor-pointer underline">Sair</button>
     </p>
   }
 
-  <footer class="mt-4 text-center text-xs text-muted">
+  <footer class="mt-4 text-center text-xs text-muted print:hidden">
     Desenvolvido por Anderson Pedro do Nascimento
   </footer>
 </div>

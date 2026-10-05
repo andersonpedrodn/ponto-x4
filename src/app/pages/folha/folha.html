@@ -1,0 +1,92 @@
+<div class="mb-4 flex flex-wrap items-center justify-between gap-2 print:hidden">
+  <div class="flex items-center gap-2">
+    <button type="button" (click)="mudarMes(-1)" class="nb-btn nb-btn-ghost px-3 py-1.5 text-base" aria-label="Mês anterior">‹</button>
+    <span class="font-semibold capitalize">{{ rotuloMes() }}</span>
+    <button type="button" (click)="mudarMes(1)" class="nb-btn nb-btn-ghost px-3 py-1.5 text-base" aria-label="Próximo mês">›</button>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <button type="button" (click)="alternarVersao()" class="nb-btn nb-btn-ghost px-3.5 py-2.5 text-sm">
+      {{ empresa() ? 'Versão completa' : 'Versão para empresa' }}
+    </button>
+    <button type="button" (click)="imprimir()" class="nb-btn nb-btn-primary px-3.5 py-2.5 text-sm">Imprimir folha</button>
+  </div>
+</div>
+@if (empresa()) {
+  <p class="mb-3 text-xs text-muted print:hidden">Versão para empresa: a coluna Saída sai em branco para preencher à mão.</p>
+}
+
+<div>
+  <!-- na tela a folha sai da coluna estreita do app e fica centralizada na janela, sem rolagem lateral -->
+  <article class="folha relative left-1/2 w-[min(calc(100vw-3rem),820px)] -translate-x-1/2 bg-white p-3 text-[10px] leading-4 text-black sm:text-[11px] print:static print:w-full print:translate-x-0 print:p-0 print:text-[11px]">
+    <img src="logo-x4.avif" alt="X4 Serviços" class="mb-1 h-14 w-auto" />
+
+    <h2 class="border-2 border-b-0 border-black py-0.5 text-center text-[11px] font-bold uppercase tracking-normal">
+      Folha individual de ponto (Lei 3.626/91)
+    </h2>
+    <div class="grid grid-cols-[1fr_auto] border-2 border-black">
+      <div class="border-r-2 border-black p-1">
+        <p><b>Empregador:</b> {{ empregador.nome }}</p>
+        <p><b>Endereço:</b> {{ empregador.endereco }}</p>
+        <p><b>Atividade:</b> {{ empregador.atividade }}</p>
+      </div>
+      <div class="p-1">
+        <p><b>CNPJ/CEI:</b> {{ empregador.cnpj }}</p>
+        <p><b>Competência (mês/ano):</b> {{ competencia() }}</p>
+        <p><b>Cargo:</b> {{ empregado.cargo }}</p>
+      </div>
+    </div>
+    <p class="border-x-2 border-b-2 border-black p-1"><b>Empregado:</b> {{ empregado.nome }}</p>
+
+    <table class="w-full border-collapse border-2 border-black text-center tabular-nums">
+      <thead>
+        <tr>
+          <th rowspan="2" class="w-8 border border-black">Dia</th>
+          <th rowspan="2" class="w-20 border border-black">Entrada</th>
+          <th colspan="2" class="border border-black">Intervalo</th>
+          <th rowspan="2" class="w-16 border border-black">Saída</th>
+          <th colspan="2" class="border border-black">Serviços Externos</th>
+          <th rowspan="2" class="border border-black">Assinatura/Justificativa</th>
+        </tr>
+        <tr>
+          <th class="w-16 border border-black">Início</th>
+          <th class="w-16 border border-black">Fim</th>
+          <th class="w-14 border border-black">Entrada</th>
+          <th class="w-14 border border-black">Saída</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (l of linhas(); track l.dia) {
+          <tr class="h-5">
+            <td class="border border-black font-semibold">{{ l.dia }}</td>
+            <td class="border border-black">{{ l.rotulo || l.entrada }}</td>
+            <td class="border border-black">{{ l.inicio }}</td>
+            <td class="border border-black">{{ l.fim }}</td>
+            <td class="border border-black">{{ empresa() && l.trabalhado ? '' : l.saida }}</td>
+            <td class="border border-black"></td>
+            <td class="border border-black"></td>
+            <td class="border border-black"></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <p class="my-1 text-center text-[10px] font-bold uppercase">
+      O não preenchimento correto e diário do cartão ponto é passível de advertência
+    </p>
+
+    <div class="mt-16 grid grid-cols-2 gap-10 text-center">
+      <p class="border-t border-black pt-0.5">Assinatura do Empregado</p>
+      <p class="border-t border-black pt-0.5">Assinatura do Empregador</p>
+    </div>
+
+    <p class="mt-4 text-[10px]">
+      De conformidade com a portaria MTB 3.626 de 13/11/1991 art. 13, este cartão substitui, para todos os efeitos legais,
+      o quadro de horário de trabalho, inclusive o de menor aprendiz.
+    </p>
+    <div class="mt-2 text-center font-semibold">
+      <p>{{ empregador.endereco }}</p>
+      <p>Fone: (84) 3082-6827 / 98778-6875</p>
+      <p>Site: x4servicos.com.br / Email: x4servicos@gmail.com</p>
+    </div>
+  </article>
+</div>

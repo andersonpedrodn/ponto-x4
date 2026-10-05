@@ -49,6 +49,8 @@
     </table>
   </div>
   <p class="mt-2 text-xs text-muted">Toque em um dia para corrigir ou adicionar registros.</p>
+  <a routerLink="/folha" [queryParams]="{ mes: mesParam() }" class="nb-btn nb-btn-ghost mt-3 inline-block px-3.5 py-2.5 text-sm">Imprimir folha de ponto</a>
+  <a routerLink="/folha" [queryParams]="{ mes: mesParam(), empresa: 1 }" class="nb-btn nb-btn-ghost mt-3 ml-2 inline-block px-3.5 py-2.5 text-sm">Versão para empresa</a>
 </section>
 
 @if (editando()) {

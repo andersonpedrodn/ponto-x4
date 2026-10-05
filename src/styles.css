@@ -78,3 +78,9 @@ h1, h2 {
   outline-offset: 1px;
 }
 }
+
+@media print {
+  @page { size: A4 portrait; margin: 10mm; }
+  body { background: #fff; }
+  .folha { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

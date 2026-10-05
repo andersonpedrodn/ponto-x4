@@ -1,4 +1,5 @@
 import { Component, Injector, afterNextRender, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { DIAS_CURTOS } from '../../core/models';
 import { PontoService } from '../../core/ponto.service';
 import { chaveDia, classeSaldo, fmtMin, fmtSaldo, hhmm, hhmmParaMin, minParaHHMM, pad, trabalhado } from '../../core/time.utils';
@@ -17,6 +18,7 @@ interface LinhaDia {
 
 @Component({
   selector: 'app-historico',
+  imports: [RouterLink],
   templateUrl: './historico.html',
   host: { '(document:keydown.escape)': 'fecharBanco()' },
 })
@@ -71,6 +73,8 @@ export class Historico {
 
   protected readonly totalMes = computed(() => this.linhas().reduce((s, l) => s + l.total, 0));
   protected readonly saldoMes = computed(() => this.linhas().reduce((s, l) => s + l.saldo, 0));
+
+  protected readonly mesParam = computed(() => `${this.mes().getFullYear()}-${pad(this.mes().getMonth() + 1)}`);
 
   // ----- banco de horas -----
   protected readonly banco = this.ponto.banco;
