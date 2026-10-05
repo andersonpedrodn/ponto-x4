@@ -1,4 +1,4 @@
-<section class="rounded-xl border border-line bg-white p-6">
+<section class="nb-card p-6">
   <h2 class="mb-3 text-[15px] font-semibold">Jornada contratada por dia (horas:minutos)</h2>
   <div class="grid grid-cols-2 gap-2">
     @for (dia of ordem; track dia) {
@@ -9,7 +9,7 @@
           [id]="'jor-' + dia"
           [value]="jornadas()[dia]"
           (input)="alterar(dia, $any($event.target).value)"
-          class="w-full rounded-lg border border-line bg-white px-2.5 py-2"
+          class="w-full nb-input px-2.5 py-2"
         />
       </div>
     }
@@ -20,26 +20,26 @@
   <button
     type="button"
     (click)="salvarJornada()"
-    class="mt-3 cursor-pointer rounded-lg border border-brand bg-brand px-3.5 py-2.5 text-sm font-semibold text-white"
+    class="mt-3 nb-btn nb-btn-primary px-3.5 py-2.5 text-sm "
   >{{ salvo() ? 'Salvo ✓' : 'Salvar jornada' }}</button>
 </section>
 
-<section class="mt-4 rounded-xl border border-line bg-white p-6">
+<section class="mt-4 nb-card p-6">
   <h2 class="mb-2 text-[15px] font-semibold">Backup dos dados</h2>
   <p class="text-xs text-muted">
     Seus horários ficam salvos na conta {{ email()?.email }} (Firestore) e aparecem em qualquer aparelho em que você entrar.
     O arquivo de backup é uma cópia extra opcional.
   </p>
   @if (temDadosLocais()) {
-    <div class="mt-3 rounded-lg bg-surface p-3 text-sm">
+    <div class="mt-3 rounded-md border-2 border-line bg-surface p-3 text-sm">
       Há registros da versão antiga salvos só neste navegador.
-      <button type="button" (click)="enviarLocais()" class="mt-2 block cursor-pointer rounded-lg border border-brand bg-brand px-3.5 py-2 text-sm font-semibold text-white">Enviar para minha conta</button>
+      <button type="button" (click)="enviarLocais()" class="mt-2 block nb-btn nb-btn-primary px-3.5 py-2 text-sm ">Enviar para minha conta</button>
     </div>
   }
   <p class="mt-2 text-xs text-muted">{{ ultimoBackup() }}</p>
   <div class="mt-3 flex flex-wrap gap-2">
-    <button type="button" (click)="baixarBackup()" class="cursor-pointer rounded-lg border border-brand bg-brand px-3.5 py-2.5 text-sm font-semibold text-white">Baixar arquivo de backup</button>
-    <button type="button" (click)="arquivo.click()" class="cursor-pointer rounded-lg border border-line px-3.5 py-2.5 text-sm">Importar arquivo</button>
+    <button type="button" (click)="baixarBackup()" class="nb-btn nb-btn-primary px-3.5 py-2.5 text-sm ">Baixar arquivo de backup</button>
+    <button type="button" (click)="arquivo.click()" class="nb-btn nb-btn-ghost px-3.5 py-2.5 text-sm">Importar arquivo</button>
     <input #arquivo type="file" accept="application/json,.json" class="hidden" (change)="importar($event)" />
   </div>
   <p class="mt-2 min-h-5 text-center text-sm text-muted">{{ mensagem() }}</p>

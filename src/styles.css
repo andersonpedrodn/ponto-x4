@@ -1,16 +1,80 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand: #1f4e9c;
-  --color-brand-dark: #173b79;
+  --color-brand: #1e3a9e;
+  --color-brand-dark: #152b78;
   --color-ok: #12805c;
   --color-warn: #c2410c;
-  --color-surface: #f3f5f8;
-  --color-line: #e0e4ea;
-  --color-muted: #667085;
-  --font-sans: "Segoe UI", Arial, sans-serif;
+  --color-surface: #f9f0f5;
+  --color-line: #020103;
+  --color-muted: #383638;
+  --color-olive: #6b7a2a;
+  --font-sans: "Plus Jakarta Sans", "Segoe UI", Arial, sans-serif;
+}
+
+:root {
+  --nb-border: 2px;
+  --nb-shadow: 6px;
+  --nb-ink: #020103;
+  --nb-olive: #6b7a2a;
 }
 
 body {
   @apply bg-surface text-neutral-900 min-h-screen;
+  color: var(--nb-ink);
+}
+
+h1, h2 {
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+@layer components {
+.nb-card {
+  background: #fff;
+  border: var(--nb-border) solid var(--nb-ink);
+  border-radius: 6px;
+  box-shadow: var(--nb-shadow) var(--nb-shadow) 0 var(--nb-olive);
+}
+
+.nb-btn {
+  cursor: pointer;
+  border: var(--nb-border) solid var(--nb-ink);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--nb-ink);
+  font-weight: 700;
+  box-shadow: 4px 4px 0 var(--nb-olive);
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.nb-btn:hover {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--nb-olive);
+}
+.nb-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 var(--nb-olive);
+}
+.nb-btn-primary {
+  background: var(--color-brand);
+  color: #fff;
+}
+.nb-btn-ghost {
+  box-shadow: none;
+}
+.nb-btn-ghost:hover {
+  transform: none;
+  box-shadow: none;
+  background: var(--color-surface);
+}
+
+.nb-input {
+  border: var(--nb-border) solid var(--nb-ink);
+  border-radius: 6px;
+  background: #fff;
+}
+.nb-input:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 1px;
+}
 }

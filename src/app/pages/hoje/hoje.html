@@ -1,11 +1,11 @@
-<section class="rounded-xl border border-line bg-white p-6">
+<section class="nb-card p-6">
   <div class="text-center text-sm text-muted capitalize">{{ dataExtenso() }}</div>
   <div class="mt-1 mb-4 text-center text-5xl font-bold tabular-nums">{{ hhmmss(agora()) }}</div>
 
   <button
     type="button"
     (click)="bater()"
-    class="w-full cursor-pointer rounded-lg py-4 text-lg font-bold text-white transition hover:brightness-110 active:scale-[.98]"
+    class="nb-btn w-full py-4 text-lg !text-white"
     [class.bg-ok]="!aberto()"
     [class.bg-warn]="aberto()"
   >{{ rotuloBotao() }}</button>
@@ -13,26 +13,26 @@
   <p class="mt-2.5 min-h-5 text-center text-sm text-muted">{{ status() }}</p>
 </section>
 
-<section class="mt-4 grid grid-cols-2 gap-2.5 rounded-xl border border-line bg-white p-6">
-  <div class="rounded-lg bg-surface p-3 text-center">
+<section class="mt-4 grid grid-cols-2 gap-2.5 nb-card p-6">
+  <div class="rounded-md border-2 border-line bg-surface p-3 text-center">
     <small class="mb-1 block text-xs text-muted">Trabalhado hoje</small>
     <b class="text-2xl tabular-nums">{{ fmtMin(trabalhadoMin()) }}</b>
   </div>
-  <div class="rounded-lg bg-surface p-3 text-center">
+  <div class="rounded-md border-2 border-line bg-surface p-3 text-center">
     <small class="mb-1 block text-xs text-muted">{{ saldo() >= 0 ? 'Hora extra hoje' : 'Falta cumprir' }}</small>
     <b class="text-2xl tabular-nums" [class]="classeSaldo()">{{ fmtMin(saldo() < 0 ? -saldo() : saldo()) }}</b>
   </div>
-  <div class="rounded-lg bg-surface p-3 text-center">
+  <div class="rounded-md border-2 border-line bg-surface p-3 text-center">
     <small class="mb-1 block text-xs text-muted">Jornada do dia</small>
     <b class="text-2xl tabular-nums">{{ fmtMin(jornadaMin()) }}</b>
   </div>
-  <div class="rounded-lg bg-surface p-3 text-center">
+  <div class="rounded-md border-2 border-line bg-surface p-3 text-center">
     <small class="mb-1 block text-xs text-muted">Previsão de saída</small>
     <b class="text-2xl tabular-nums">{{ previsaoSaida() }}</b>
   </div>
 </section>
 
-<section class="mt-4 rounded-xl border border-line bg-white p-6">
+<section class="mt-4 nb-card p-6">
   <h2 class="mb-3 text-[15px] font-semibold">Registros de hoje</h2>
   @if (batidas().length) {
     <ul>

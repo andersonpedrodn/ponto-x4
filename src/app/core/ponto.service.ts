@@ -31,6 +31,9 @@ export class PontoService {
   /** Dados da versão antiga (localStorage) que ainda não foram enviados para a nuvem. */
   readonly dadosLocais = signal<PontoDb | null>(this.lerLocal());
 
+  /** Mensagem quando o Firestore recusa ler ou gravar (ex.: API desativada, regras). */
+  readonly erroNuvem = signal('');
+
   private unsubs: Unsubscribe[] = [];
 
   constructor() {
@@ -48,17 +51,17 @@ export class PontoService {
   bater() {
     const k = chaveDia(new Date());
     // arrayUnion evita perder batidas se dois aparelhos gravarem ao mesmo tempo
-    return setDoc(this.refDia(k), { batidas: arrayUnion(Date.now()) }, { merge: true });
+    return this.vigiar(setDoc(this.refDia(k), { batidas: arrayUnion(Date.now()) }, { merge: true }));
   }
 
   setDia(chave: string, batidas: number[]) {
-    return batidas.length
+    return this.vigiar(batidas.length
       ? setDoc(this.refDia(chave), { batidas })
-      : deleteDoc(this.refDia(chave));
+      : deleteDoc(this.refDia(chave)));
   }
 
   setJornada(jornada: number[]) {
-    return setDoc(this.refUsuario(), { jornada }, { merge: true });
+    return this.vigiar(setDoc(this.refUsuario(), { jornada }, { merge: true }));
   }
 
   exportar(): string {
@@ -124,11 +127,12 @@ export class PontoService {
 
     this.unsubs.push(
       onSnapshot(doc(firestore, 'users', uid), snap => {
+        this.erroNuvem.set('');
         const j = snap.data()?.['jornada'];
         jornada = Array.isArray(j) && j.length === 7 ? j : DB_PADRAO.jornada;
         recebeuJornada = true;
         publicar();
-      }),
+      }, e => this.falhou(e)),
       onSnapshot(collection(firestore, 'users', uid, 'dias'), snap => {
         dias = {};
         snap.forEach(d => {
@@ -137,8 +141,20 @@ export class PontoService {
         });
         recebeuDias = true;
         publicar();
-      }),
+      }, e => this.falhou(e)),
     );
+  }
+
+  /** Registra falha de gravação (o setDoc só rejeita quando o servidor recusa). */
+  private vigiar<T>(p: Promise<T>): Promise<T> {
+    p.catch(e => this.falhou(e));
+    return p;
+  }
+
+  private falhou(e: unknown) {
+    const code = (e as { code?: string }).code ?? 'erro desconhecido';
+    console.error('Firestore:', e);
+    this.erroNuvem.set(`Não foi possível sincronizar com a nuvem (${code}). Seus dados podem não estar salvos.`);
   }
 
   private desinscrever() {
