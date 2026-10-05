@@ -5,6 +5,8 @@ export interface PontoDb {
   dias: Record<string, number[]>;
   /** Dias marcados como feriado ('YYYY-MM-DD'): a jornada do dia é zero. */
   feriados: string[];
+  /** Minutos de folga tirados do banco de horas, por dia ('YYYY-MM-DD'). */
+  folgas: Record<string, number>;
 }
 
 export const DIAS_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
@@ -14,4 +16,5 @@ export const DB_PADRAO: PontoDb = {
   jornada: [0, 480, 480, 480, 480, 480, 0],
   dias: {},
   feriados: [],
+  folgas: {},
 };

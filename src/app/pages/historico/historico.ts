@@ -1,7 +1,7 @@
 import { Component, Injector, afterNextRender, computed, inject, signal } from '@angular/core';
 import { DIAS_CURTOS } from '../../core/models';
 import { PontoService } from '../../core/ponto.service';
-import { chaveDia, classeSaldo, fmtMin, fmtSaldo, hhmm, pad, trabalhado } from '../../core/time.utils';
+import { chaveDia, classeSaldo, fmtMin, fmtSaldo, hhmm, hhmmParaMin, minParaHHMM, pad, trabalhado } from '../../core/time.utils';
 
 interface LinhaDia {
   chave: string;
@@ -10,6 +10,7 @@ interface LinhaDia {
   registros: string;
   temRegistro: boolean;
   feriado: boolean;
+  folga: number;
   total: number;
   saldo: number;
 }
@@ -17,6 +18,7 @@ interface LinhaDia {
 @Component({
   selector: 'app-historico',
   templateUrl: './historico.html',
+  host: { '(document:keydown.escape)': 'fecharBanco()' },
 })
 export class Historico {
   private readonly ponto = inject(PontoService);
@@ -45,9 +47,10 @@ export class Historico {
       const batidas = db.dias[chave] ?? [];
       const dow = new Date(ano, m, d).getDay();
       const feriado = db.feriados.includes(chave);
-      const jornada = feriado ? 0 : db.jornada[dow];
-      // dias futuros e dias sem expediente e sem registro não aparecem (feriado marcado sempre aparece)
-      if (!batidas.length && !feriado && (chave > hojeChave || jornada === 0)) continue;
+      const folga = db.folgas[chave] ?? 0;
+      const jornada = this.ponto.jornadaDoDia(chave);
+      // dias futuros e dias sem expediente e sem registro não aparecem (feriado e folga marcados sempre aparecem)
+      if (!batidas.length && !feriado && !folga && (chave > hojeChave || jornada === 0)) continue;
 
       const total = trabalhado(batidas, chave === hojeChave ? this.ponto.agora() : null);
       linhas.push({
@@ -57,9 +60,10 @@ export class Historico {
         registros: batidas.map(hhmm).join(' · '),
         temRegistro: batidas.length > 0,
         feriado,
+        folga,
         total,
         // dia útil já passado sem registro conta como falta (saldo negativo)
-        saldo: batidas.length || chave < hojeChave ? total - jornada : 0,
+        saldo: batidas.length || chave < hojeChave ? total - jornada + folga : 0,
       });
     }
     return linhas;
@@ -67,6 +71,43 @@ export class Historico {
 
   protected readonly totalMes = computed(() => this.linhas().reduce((s, l) => s + l.total, 0));
   protected readonly saldoMes = computed(() => this.linhas().reduce((s, l) => s + l.saldo, 0));
+
+  // ----- banco de horas -----
+  protected readonly banco = this.ponto.banco;
+  protected readonly bancoAberto = signal(false);
+  protected readonly folgaData = signal('');
+  protected readonly folgaHoras = signal('');
+  protected readonly folgas = computed(() =>
+    Object.entries(this.ponto.db().folgas)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([chave, min]) => ({ chave, data: chave.split('-').reverse().join('/'), min })),
+  );
+
+  protected abrirBanco() {
+    this.bancoAberto.set(true);
+    this.mudarDataFolga(chaveDia(new Date()));
+  }
+
+  protected fecharBanco() {
+    this.bancoAberto.set(false);
+  }
+
+  /** Ao escolher a data, sugere a jornada daquele dia como horas de folga. */
+  protected mudarDataFolga(chave: string) {
+    this.folgaData.set(chave);
+    this.folgaHoras.set(chave ? minParaHHMM(this.ponto.jornadaDoDia(chave)) : '');
+  }
+
+  protected registrarFolga() {
+    const chave = this.folgaData();
+    const min = hhmmParaMin(this.folgaHoras());
+    if (!chave || min <= 0) return;
+    this.ponto.setFolga(chave, min);
+  }
+
+  protected removerFolga(chave: string) {
+    this.ponto.setFolga(chave, 0);
+  }
 
   // ----- edição de um dia -----
   protected readonly editando = signal<string | null>(null);

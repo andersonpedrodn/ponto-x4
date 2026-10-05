@@ -10,10 +10,14 @@
       <small class="mb-1 block text-xs text-muted">Trabalhado no mês</small>
       <b class="text-2xl tabular-nums">{{ fmtMin(totalMes()) }}</b>
     </div>
-    <div class="rounded-md border-2 border-line bg-surface p-3 text-center">
-      <small class="mb-1 block text-xs text-muted">Saldo do mês</small>
+    <button
+      type="button"
+      (click)="abrirBanco()"
+      class="cursor-pointer rounded-md border-2 border-line bg-surface p-3 text-center hover:bg-white"
+    >
+      <small class="mb-1 block text-xs text-muted">Saldo do mês · banco de horas ›</small>
       <b class="text-2xl tabular-nums" [class]="classeSaldo(saldoMes())">{{ fmtSaldo(saldoMes()) }}</b>
-    </div>
+    </button>
   </div>
 
   <div class="overflow-x-auto">
@@ -32,7 +36,8 @@
             <td class="px-1 py-2.5">{{ l.dia }} <span class="text-muted">{{ l.diaSemana }}</span></td>
             <td class="px-1 py-2.5">
               @if (l.feriado) { <b class="mr-1 text-xs uppercase">Feriado</b> }
-              @if (l.temRegistro) { {{ l.registros }} } @else if (!l.feriado) { <span class="text-muted">sem registro</span> }
+              @if (l.folga) { <b class="mr-1 text-xs uppercase">Folga {{ fmtMin(l.folga) }}</b> }
+              @if (l.temRegistro) { {{ l.registros }} } @else if (!l.feriado && !l.folga) { <span class="text-muted">sem registro</span> }
             </td>
             <td class="px-1 py-2.5 text-right">{{ l.temRegistro ? fmtMin(l.total) : '–' }}</td>
             <td class="px-1 py-2.5 text-right" [class]="classeSaldo(l.saldo)">{{ fmtSaldo(l.saldo) }}</td>
@@ -75,4 +80,69 @@
     </div>
     <p class="mt-2 text-xs text-muted">Os registros alternam entre entrada e saída, na ordem do horário.</p>
   </section>
+}
+
+
+@if (bancoAberto()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="fecharBanco()">
+    <section
+      class="nb-card max-h-[90vh] w-full max-w-md overflow-y-auto p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="banco-titulo"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="mb-4 flex items-center justify-between">
+        <h2 id="banco-titulo" class="text-[15px] font-semibold">Banco de horas</h2>
+        <button type="button" (click)="fecharBanco()" class="nb-btn nb-btn-ghost px-3 py-1.5 text-sm" aria-label="Fechar">✕</button>
+      </div>
+
+      <div class="mb-4 rounded-md border-2 border-line bg-surface p-3 text-center">
+        <small class="mb-1 block text-xs text-muted">Disponível no banco</small>
+        <b class="text-3xl tabular-nums" [class]="classeSaldo(banco().saldo)">{{ fmtSaldo(banco().saldo) }}</b>
+      </div>
+      <div class="mb-5 grid grid-cols-2 gap-2.5 text-center text-sm tabular-nums">
+        <div class="rounded-md border-2 border-line p-2.5">
+          <small class="block text-xs text-muted">Extras acumuladas</small>
+          <b>{{ fmtSaldo(banco().acumulado) }}</b>
+        </div>
+        <div class="rounded-md border-2 border-line p-2.5">
+          <small class="block text-xs text-muted">Folgas tiradas</small>
+          <b>{{ fmtMin(banco().tiradas) }}</b>
+        </div>
+      </div>
+
+      <h3 class="mb-2 text-sm font-semibold">Registrar folga</h3>
+      <div class="mb-2 flex flex-wrap items-center gap-2">
+        <input
+          type="date"
+          [value]="folgaData()"
+          (input)="mudarDataFolga($any($event.target).value)"
+          class="nb-input px-2.5 py-2"
+          aria-label="Dia da folga"
+        />
+        <input
+          type="time"
+          [value]="folgaHoras()"
+          (input)="folgaHoras.set($any($event.target).value)"
+          class="nb-input px-2.5 py-2"
+          aria-label="Horas de folga"
+        />
+        <button type="button" (click)="registrarFolga()" class="nb-btn nb-btn-primary px-3.5 py-2.5 text-sm">Registrar</button>
+      </div>
+      <p class="mb-4 text-xs text-muted">
+        Informe o dia e quantas horas de folga (a jornada do dia vem sugerida). Pode ser um dia futuro; registrar de novo no mesmo dia substitui.
+      </p>
+
+      <h3 class="mb-2 text-sm font-semibold">Folgas registradas</h3>
+      @for (f of folgas(); track f.chave) {
+        <div class="flex items-center justify-between border-t border-line py-2 text-sm tabular-nums">
+          <span>{{ f.data }} · {{ fmtMin(f.min) }}</span>
+          <button type="button" (click)="removerFolga(f.chave)" class="nb-btn nb-btn-ghost px-3 py-1.5 text-sm text-warn">Remover</button>
+        </div>
+      } @empty {
+        <p class="text-sm text-muted">Nenhuma folga registrada.</p>
+      }
+    </section>
+  </div>
 }
