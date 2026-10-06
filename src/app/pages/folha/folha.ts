@@ -24,8 +24,6 @@ interface LinhaFolha {
   inicio: string;
   fim: string;
   saida: string;
-  /** Dia com batidas registradas (usado para deixar a saída em branco na versão para empresa). */
-  trabalhado: boolean;
 }
 
 const hhmmParaTs = (v: string) => {
@@ -51,10 +49,12 @@ export class Folha {
     { initialValue: false },
   );
   private readonly empresaEscolhida = signal<boolean | null>(null);
-  /** Versão para empresa: a coluna Saída sai em branco, para ser preenchida à mão. */
+  /** Versão para empresa: igual à completa, mas com a folha aberta para ajustes antes de imprimir. */
   protected readonly empresa = computed(() => this.empresaEscolhida() ?? this.paramEmpresa());
 
   protected alternarVersao() {
+    this.editando.set(null);
+    this.editandoJust.set(null);
     this.empresaEscolhida.set(!this.empresa());
   }
 
@@ -87,7 +87,7 @@ export class Folha {
 
     for (let d = 1; d <= 31; d++) {
       const dia = pad(d);
-      const vazia: LinhaFolha = { dia, chave: '', rotulo: '—', entrada: '—', inicio: '—', fim: '—', saida: '—', trabalhado: false };
+      const vazia: LinhaFolha = { dia, chave: '', rotulo: '—', entrada: '—', inicio: '—', fim: '—', saida: '—' };
       if (d > diasNoMes) { linhas.push(vazia); continue; }
 
       const chave = `${ano}-${pad(m + 1)}-${dia}`;
@@ -98,7 +98,7 @@ export class Folha {
       if (b.length) {
         // 2 batidas = entrada e saída sem intervalo; 4 = jornada com intervalo
         const [e, i, f, s] = b.length === 2 ? [b[0], undefined, undefined, b[1]] : b;
-        linhas.push({ dia, chave, rotulo: '', entrada: hora(e), inicio: hora(i), fim: hora(f), saida: hora(s), trabalhado: true });
+        linhas.push({ dia, chave, rotulo: '', entrada: hora(e), inicio: hora(i), fim: hora(f), saida: hora(s) });
       } else if (db.feriados.includes(chave)) {
         linhas.push({ ...vazia, rotulo: 'Feriado' });
       } else if (db.jornada[dow] === 0) {
@@ -117,15 +117,42 @@ export class Folha {
   protected saidaExibida(l: LinhaFolha): string {
     const editada = this.saidasEditadas()[l.chave];
     if (editada) return hora(hhmmParaTs(editada));
-    return this.empresa() && l.trabalhado ? '' : l.saida;
+    return l.saida;
+  }
+
+  /** Justificativas digitadas só para a impressão. Chave 'AAAA-MM-DD' -> texto. */
+  protected readonly justificativas = signal<Record<string, string>>({});
+  protected readonly editandoJust = signal<string | null>(null);
+
+  protected editarJust(l: LinhaFolha, ev: Event) {
+    if (!this.empresa()) return;
+    if (l.chave) this.editandoJust.set(l.chave);
+    this.focarCampo(ev);
+  }
+
+  /** O atributo autofocus não vale para elementos inseridos depois do carregamento; foca o input após renderizar. */
+  private focarCampo(ev: Event) {
+    const td = ev.currentTarget as HTMLElement;
+    setTimeout(() => td.querySelector('input')?.focus());
+  }
+
+  protected confirmarJust(l: LinhaFolha, valor: string) {
+    const v = valor.trim();
+    this.justificativas.update(o => {
+      const { [l.chave]: _, ...resto } = o;
+      return v ? { ...resto, [l.chave]: v } : resto;
+    });
+    this.editandoJust.set(null);
   }
 
   protected valorEdicao(l: LinhaFolha): string {
     return this.saidasEditadas()[l.chave] ?? '';
   }
 
-  protected editarSaida(l: LinhaFolha) {
+  protected editarSaida(l: LinhaFolha, ev: Event) {
+    if (!this.empresa()) return;
     if (l.chave) this.editando.set(l.chave);
+    this.focarCampo(ev);
   }
 
   protected confirmarSaida(l: LinhaFolha, valor: string) {

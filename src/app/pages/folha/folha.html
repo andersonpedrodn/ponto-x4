@@ -12,9 +12,8 @@
   </div>
 </div>
 @if (empresa()) {
-  <p class="mb-3 text-xs text-muted print:hidden">Versão para empresa: a coluna Saída sai em branco para preencher à mão.</p>
+<p class="mb-3 text-xs text-muted print:hidden">Versão para empresa: clique em uma Saída ou em Assinatura/Justificativa para editar antes de imprimir (não altera seus registros).</p>
 }
-<p class="mb-3 text-xs text-muted print:hidden">Clique em uma Saída para editar o horário antes de imprimir (não altera seus registros).</p>
 
 <div>
   <!-- na tela a folha sai da coluna estreita do app e fica centralizada na janela, sem rolagem lateral -->
@@ -62,7 +61,7 @@
             <td class="border border-black">{{ l.rotulo || l.entrada }}</td>
             <td class="border border-black">{{ l.inicio }}</td>
             <td class="border border-black">{{ l.fim }}</td>
-            <td class="border border-black p-0" [class]="l.chave ? 'cursor-pointer hover:bg-yellow-100 print:hover:bg-transparent' : ''" (click)="editarSaida(l)">
+            <td class="border border-black p-0" [class]="l.chave && empresa() ? 'cursor-pointer hover:bg-yellow-100 print:hover:bg-transparent' : ''" (click)="editarSaida(l, $event)">
               @if (editando() === l.chave) {
                 <input #campo type="time" [value]="valorEdicao(l)" (focus)="campo.showPicker?.()"
                   (blur)="confirmarSaida(l, campo.value)" (keydown.enter)="campo.blur()" (keydown.escape)="editando.set(null)"
@@ -73,7 +72,15 @@
             </td>
             <td class="border border-black"></td>
             <td class="border border-black"></td>
-            <td class="border border-black"></td>
+            <td class="border border-black p-0" [class]="l.chave && empresa() ? 'cursor-pointer hover:bg-yellow-100 print:hover:bg-transparent' : ''" (click)="editarJust(l, $event)">
+              @if (editandoJust() === l.chave) {
+                <input #just type="text" [value]="justificativas()[l.chave] ?? ''"
+                  (blur)="confirmarJust(l, just.value)" (keydown.enter)="just.blur()" (keydown.escape)="editandoJust.set(null)"
+                  class="w-full bg-yellow-100 px-1 text-[10px] outline-none print:hidden" autofocus />
+              } @else {
+                {{ justificativas()[l.chave] ?? '' }}
+              }
+            </td>
           </tr>
         }
       </tbody>
