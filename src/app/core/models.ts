@@ -9,6 +9,16 @@ export interface PontoDb {
   folgas: Record<string, number>;
 }
 
+/** Atividade cadastrada para o relatório mensal. */
+export interface Atividade {
+  id: string;
+  /** Dia em que foi feita, 'AAAA-MM-DD'. */
+  data: string;
+  texto: string;
+  /** Timestamp de criação (desempate na ordenação). */
+  criado: number;
+}
+
 export const DIAS_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 export const DIAS_CURTOS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 

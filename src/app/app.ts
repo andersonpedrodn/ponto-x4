@@ -16,5 +16,6 @@ export class App {
     { rota: '/hoje', nome: 'Hoje' },
     { rota: '/historico', nome: 'Histórico' },
     { rota: '/ajustes', nome: 'Ajustes' },
+    { rota: '/relatorio', nome: 'Relatório' },
   ];
 }

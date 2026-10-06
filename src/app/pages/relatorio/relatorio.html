@@ -1,0 +1,70 @@
+<div class="mb-4 flex flex-wrap items-center justify-between gap-2 print:hidden">
+  <div class="flex items-center gap-2">
+    <button type="button" (click)="mudarMes(-1)" class="nb-btn nb-btn-ghost px-3 py-1.5 text-base" aria-label="Mês anterior">‹</button>
+    <span class="font-semibold">{{ rotuloMes() }}</span>
+    <button type="button" (click)="mudarMes(1)" class="nb-btn nb-btn-ghost px-3 py-1.5 text-base" aria-label="Próximo mês">›</button>
+  </div>
+  <button type="button" (click)="imprimir()" class="nb-btn nb-btn-primary px-3.5 py-2.5 text-sm">Imprimir relatório</button>
+</div>
+
+<section class="nb-card mb-4 p-4 print:hidden">
+  <h2 class="mb-2 font-extrabold">Nova atividade</h2>
+  <input type="date" [value]="novaData()" (input)="novaData.set(valorDe($event))" class="nb-input mb-2 w-full" />
+  <textarea rows="3" [value]="novoTexto()" (input)="novoTexto.set(valorDe($event))"
+    placeholder="Descreva a atividade realizada…" class="nb-input mb-2 w-full"></textarea>
+  <button type="button" (click)="adicionar()" [disabled]="!novoTexto().trim()" class="nb-btn nb-btn-primary w-full py-2.5 text-sm">Adicionar</button>
+</section>
+
+<section class="nb-card mb-4 p-4 print:hidden">
+  <h2 class="mb-2 font-extrabold">Atividades de {{ rotuloMes() }} ({{ atividades().length }})</h2>
+  @if (!atividades().length) {
+    <p class="text-sm text-muted">Nenhuma atividade cadastrada neste mês.</p>
+  }
+  <ul class="space-y-2">
+    @for (a of atividades(); track a.id) {
+      <li class="border-2 border-black bg-white p-2 text-sm">
+        <div class="mb-1 flex items-center justify-between text-xs font-bold text-muted">
+          <span>{{ dataCurta(a.data) }}</span>
+          <span class="flex gap-3">
+            <button type="button" class="cursor-pointer underline" (click)="editandoId.set(a.id)">Editar</button>
+            <button type="button" class="cursor-pointer text-warn underline" (click)="remover(a)">Remover</button>
+          </span>
+        </div>
+        @if (editandoId() === a.id) {
+          <textarea #campo rows="4" [value]="a.texto" class="nb-input w-full" autofocus
+            (blur)="salvar(a, campo.value)" (keydown.escape)="editandoId.set(null)"></textarea>
+        } @else {
+          <p class="whitespace-pre-line">{{ a.texto }}</p>
+        }
+      </li>
+    }
+  </ul>
+</section>
+
+<article class="mx-auto w-full bg-white p-4 text-[12px] leading-5 text-black print:p-0">
+  <div class="text-center font-bold">
+    <img src="brasao.png" alt="" class="mx-auto mb-2 h-20 w-auto" onerror="this.remove()" />
+    <p>TRIBUNAL REGIONAL ELEITORAL DO RIO GRANDE DO NORTE</p>
+    <p class="mt-4">RELATÓRIO DE ATIVIDADES DO(A) COLABORADOR(A)</p>
+    <p class="mt-4">{{ contrato }}</p>
+    <p class="mt-4">MÊS:{{ nomeMes() }}/ ANO:{{ ano() }}</p>
+  </div>
+
+  <p class="mt-5 mb-1">1- Identificação</p>
+  <div class="border border-black">
+    <p class="border-b border-black p-1">Nome: {{ colaborador.nome }}</p>
+    <p class="p-1">Função: {{ colaborador.funcao }}</p>
+  </div>
+
+  <p class="mt-5 mb-1">2 – Atividades desenvolvidas.</p>
+  <ul class="list-disc border border-black py-1 pr-3 pl-8 text-justify">
+    @for (a of atividades(); track a.id) {
+      <li class="whitespace-pre-line">{{ a.texto }}</li>
+    }
+  </ul>
+
+  <p class="mt-5">{{ dataRodape() }}</p>
+  <div class="mt-16 text-center">
+    <p class="mx-auto w-72 border-t border-black pt-1">{{ colaborador.nome }}<br />Colaborador(a)</p>
+  </div>
+</article>

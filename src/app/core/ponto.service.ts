@@ -1,10 +1,10 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import {
-  Unsubscribe, arrayUnion, collection, deleteDoc, doc, onSnapshot, setDoc, writeBatch,
+  Unsubscribe, addDoc, arrayUnion, collection, deleteDoc, doc, onSnapshot, setDoc, updateDoc, writeBatch,
 } from 'firebase/firestore';
 import { AuthService } from './auth.service';
 import { firestore } from './firebase';
-import { DB_PADRAO, PontoDb } from './models';
+import { Atividade, DB_PADRAO, PontoDb } from './models';
 import { chaveDia, trabalhado } from './time.utils';
 
 /** Chave antiga do localStorage (versão sem login). */
@@ -17,12 +17,15 @@ type Batch = ReturnType<typeof writeBatch>;
  * Estrutura no Firestore:
  *   users/{uid}                   -> { jornada: number[] }
  *   users/{uid}/dias/{AAAA-MM-DD} -> { batidas: number[], feriado?: boolean, folga?: number }
+ *   users/{uid}/atividades/{id}   -> { data: 'AAAA-MM-DD', texto: string, criado: number }
  */
 @Injectable({ providedIn: 'root' })
 export class PontoService {
   private readonly auth = inject(AuthService);
 
   readonly db = signal<PontoDb>(structuredClone(DB_PADRAO));
+  /** Atividades do relatório mensal, ordenadas por data. */
+  readonly atividades = signal<Atividade[]>([]);
   /** false enquanto os dados da conta ainda não chegaram. */
   readonly carregado = signal(false);
   /** Relógio global atualizado a cada segundo. */
@@ -44,6 +47,7 @@ export class PontoService {
       this.desinscrever();
       this.carregado.set(false);
       this.db.set(structuredClone(DB_PADRAO));
+      this.atividades.set([]);
       if (uid) this.escutar(uid);
     });
   }
@@ -88,6 +92,18 @@ export class PontoService {
     const tiradas = Object.values(folgas).reduce((s, m) => s + m, 0);
     return { acumulado, tiradas, saldo: acumulado - tiradas };
   });
+
+  addAtividade(data: string, texto: string) {
+    return this.vigiar(addDoc(this.colAtividades(), { data, texto, criado: Date.now() }));
+  }
+
+  setAtividade(id: string, texto: string) {
+    return this.vigiar(updateDoc(doc(this.colAtividades(), id), { texto }));
+  }
+
+  removerAtividade(id: string) {
+    return this.vigiar(deleteDoc(doc(this.colAtividades(), id)));
+  }
 
   setJornada(jornada: number[]) {
     return this.vigiar(setDoc(this.refUsuario(), { jornada }, { merge: true }));
@@ -198,6 +214,11 @@ export class PontoService {
         recebeuDias = true;
         publicar();
       }, e => this.falhou(e)),
+      onSnapshot(collection(firestore, 'users', uid, 'atividades'), snap => {
+        this.atividades.set(snap.docs
+          .map(d => ({ id: d.id, data: d.data()['data'] ?? '', texto: d.data()['texto'] ?? '', criado: d.data()['criado'] ?? 0 }) as Atividade)
+          .sort((a, b) => a.data.localeCompare(b.data) || a.criado - b.criado));
+      }, e => this.falhou(e)),
     );
   }
 
@@ -220,6 +241,10 @@ export class PontoService {
 
   private refUsuario() {
     return doc(firestore, 'users', this.uid());
+  }
+
+  private colAtividades() {
+    return collection(firestore, 'users', this.uid(), 'atividades');
   }
 
   private refDia(chave: string) {
