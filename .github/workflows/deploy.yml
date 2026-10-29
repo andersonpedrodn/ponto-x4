@@ -29,4 +29,4 @@ jobs:
           workload_identity_provider: projects/968526686018/locations/global/workloadIdentityPools/github/providers/github-provider
           service_account: github-deploy@ponto-x4.iam.gserviceaccount.com
 
-      - run: npx firebase-tools deploy --only hosting --project ponto-x4
+      - run: npx firebase-tools deploy --only hosting,firestore:rules --project ponto-x4
