@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { AuthService } from '../../core/auth.service';
 import { PontoService } from '../../core/ponto.service';
 import { Atividade } from '../../core/models';
 import { chaveDia, pad } from '../../core/time.utils';
@@ -12,8 +13,12 @@ const CONTRATO = 'CONTRATO Nº 38/2026';
 })
 export class Relatorio {
   private readonly ponto = inject(PontoService);
+  private readonly auth = inject(AuthService);
 
-  protected readonly colaborador = COLABORADOR;
+  protected readonly colaborador = computed(() => ({
+    ...COLABORADOR,
+    nome: this.auth.user()?.displayName?.trim() || COLABORADOR.nome,
+  }));
   protected readonly contrato = CONTRATO;
 
   /** Primeiro dia do mês exibido (padrão: mês atual, pois as atividades são cadastradas durante o mês). */
