@@ -80,8 +80,22 @@ h1, h2 {
 }
 
 @media print {
-  /* margem 0 na página faz o navegador omitir data/título/URL; o espaço vem do padding do body */
   @page { size: A4 portrait; margin: 0; }
   body { background: #fff; padding: 10mm; }
   .folha { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .relatorio-atividade {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .relatorio-pagina-extra {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .relatorio-final {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 }

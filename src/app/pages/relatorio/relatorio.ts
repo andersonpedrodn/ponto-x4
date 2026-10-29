@@ -31,6 +31,15 @@ export class Relatorio {
   protected readonly atividades = computed(() =>
     this.ponto.atividades().filter(a => a.data.startsWith(this.prefixo())));
 
+  protected readonly paginas = computed(() => {
+    const itens = this.atividades();
+    const paginas: Atividade[][] = [];
+    for (let i = 0; i < itens.length; i += 20) {
+      paginas.push(itens.slice(i, i + 20));
+    }
+    return paginas.length ? paginas : [[]];
+  });
+
   /** Linha de data no rodapé: último dia do mês exibido. */
   protected readonly dataRodape = computed(() => {
     const m = this.mes();
